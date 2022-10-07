@@ -10,7 +10,6 @@ get_value(){
     sed -n "/^  \[\[RNode LoRa Interface/,/^  \[\[/{s/^.*$entry = \(.*\)/\1/p}" $CONFIG
 }
 
-
 change_value(){
     entry="$1"
     value="$2"
@@ -19,18 +18,38 @@ change_value(){
     evalue=$(echo $value | sed 's;/;\\/;g')
 
     # replace entry for value in file
-    sed -i.bak "/^  \[\[RNode LoRa Interface/,/^  \[\[/{s/^.*$entry =.*/    port = $evalue/}" $CONFIG 
+    sed -i.bak "/^  \[\[RNode LoRa Interface/,/^  \[\[/{s/^.*$entry =.*/    $entry = $evalue/}" $CONFIG 
 }
 
 # read all values from file and fill up array
-for value in $VALUES; do
-	ARR_CONF[$value]=$(get_value $value)
-done
+read_all_values() {
+    for value in $VALUES; do
+        ARR_CONF[$value]=$(get_value $value)
+    done
+}
 
 # create dialog menu
-for k in "${!ARR_CONF[@]}"; do
-    menu="$menu $k ${ARR_CONF[$k]}"
+create_menu() {
+    menu=""
+    for k in "${!ARR_CONF[@]}"; do
+        menu="$menu $k ${ARR_CONF[$k]}"
+    done
+}
+
+while true; do
+    read_all_values
+    create_menu
+    selection=$(dialog --clear --title "Menu Title" --menu "menu" $((${#ARR_CONF[@]}+7)) 60 ${#ARR_CONF[@]} $menu 3>&1 1>&2 2>&3)
+    exitstatus=$?
+    
+    if [ $exitstatus = 0 ]; then
+        value=$(dialog --title "Change value" --inputbox "$selection" 10 60 ${ARR_CONF[$selection]} 3>&1 1>&2 2>&3)
+	exitstatus=$?
+
+	if [ $exitstatus = 0 ]; then
+            change_value $selection $value
+	fi
+    else
+        exit 0
+    fi
 done
-
-dialog --clear --title "Menu Title" --menu "menu" $((${#ARR_CONF[@]}+7)) 60 ${#ARR_CONF[@]} $menu 
-
