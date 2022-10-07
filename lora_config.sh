@@ -1,9 +1,14 @@
 #!/bin/sh
 
-#CONFIG="~/.reticulum/config"
-CONFIG="config"
+
+CONFIG=${1:-"~/.reticulum/config"}
 VALUES="port frequency bandwidth txpower spreadingfactor codingrate flow_control"
 declare -A ARR_CONF
+
+if [ ! -f $CONFIG ]; then
+    echo "$CONFIG not found"
+    exit 1
+fi
 
 get_value(){
     entry="$1"
