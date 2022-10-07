@@ -28,10 +28,7 @@ for value in $VALUES; do
 done
 
 # create dialog menu
-count=0
-menu=""
 for k in "${!ARR_CONF[@]}"; do
-    count=$(($count + 1))
     menu="$menu $k ${ARR_CONF[$k]}"
 done
 
