@@ -1,13 +1,31 @@
 #!/bin/sh
 
 
-CONFIG=${1:-"~/.reticulum/config"}
-VALUES="port frequency bandwidth txpower spreadingfactor codingrate flow_control"
+CONFIG=${1:-"$HOME/.reticulum/config"}
+VALUES="interface_enabled port frequency bandwidth txpower spreadingfactor codingrate flow_control"
 declare -A ARR_CONF
 
 if [ ! -f $CONFIG ]; then
     echo "$CONFIG not found"
     exit 1
+fi
+
+if ! grep "RNode LoRa Interface" $CONFIG; then
+    echo "Adding default LoRa config section"
+    echo "
+  [[RNode LoRa Interface]]
+    type = RNodeInterface
+    interface_enabled = True 
+    outgoing = true
+    port = /dev/ttyUSB0
+    frequency = 867200000
+    bandwidth = 125000
+    txpower = 7
+    spreadingfactor = 8
+    codingrate = 5
+    # id_callsign = MYCALL-0
+    # id_interval = 600
+    flow_control = False" >> $CONFIG
 fi
 
 get_value(){
