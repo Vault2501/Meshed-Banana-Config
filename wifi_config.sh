@@ -31,7 +31,7 @@ image_umount() (
 )
 
 
-configure_wifi() {
+configure_wifi_armbian() {
     device=$DEVICE
     for partition in $(ls ${device}p*); do
         template="$BASE/$(basename "$partition")/boot/armbian_first_run.txt.template"
@@ -44,10 +44,31 @@ configure_wifi() {
 	    sed -i "s/MySSID/$SSID/" $target
 	    sed -i "s/MyWiFiKEY/$KEY/" $target
 	    sed -i "s/GB/$COUNTRY/" $target
+	    sed -i "s/FR_net_wifi_enabled=0/FR_net_wifi_enabled=1/" $target
         fi
     done
 }
 
+configure_wifi() {
+    device=$DEVICE
+    template="wpa_supplicant.conf.template"
+    for partition in $(ls ${device}p*); do
+        wpa_supplicant="$BASE/$(basename "$partition")/etc/wpa_supplicant"
+	echo "Checking for ${wpa_supplicant} in ${partition}"
+	if [ -d ${wpa_supplicant} ]; then
+	    echo "Found ${wpa_supplicant}"
+	    target="$BASE/$(basename "$partition")/etc/wpa_supplicant.conf"
+	    cp ${template} ${target}
+	    echo "Patching ${target}"
+	    sed -i "s/MySSID/$SSID/" $target
+            sed -i "s/MyWiFiKEY/$KEY/" $target
+            sed -i "s/GB/$COUNTRY/" $target
+	fi
+    done
+}
+
+
 DEVICE=$(image_mount)
 configure_wifi $DEVICE
+read
 image_umount $DEVICE
